@@ -1,79 +1,117 @@
-# Mako
+# Mako Art Generator
 
-A modern, elegant art gallery and portfolio application that brings your creative works to life.
+A generative art application that creates beautiful flow field visualizations using Three.js. Create, customize, and export unique artworks with various styles and configurations.
 
 ## Features
 
-- Beautiful, responsive gallery layout
-- Smooth image loading and transitions
-- Modern UI/UX design principles
-- Mobile-friendly interface
-- Easy content management
+- **Flow Field Generation**: Create mesmerizing flow field patterns with customizable parameters
+- **Multiple Art Styles**: Choose from various movement styles including:
+  - Free Movement
+  - Orthogonal (90° Turns)
+  - Diagonal (45° Angles)
+  - Spiral Tendency
+  - Vine Growth
+  - DNA Helix
+  - Crystal Growth
+  - Liquid Flow
 
-## Project Structure
+- **Real-time Controls**:
+  - Adjust line width, count, and speed
+  - Modify turn frequency and movement patterns
+  - Control trail effects and fade options
+  - Save and load custom configurations
 
-```
-mako/
-├── public/
-│   ├── images/       # Artwork images and uploads
-│   ├── assets/       # Other static assets
-│   └── index.html    # Main HTML file
-├── src/
-│   ├── components/   # Reusable UI components
-│   ├── styles/       # CSS files
-│   └── lib/         # JavaScript utilities
-└── server.js        # Express server
-```
+- **Export Options**:
+  - Save as high-resolution PNG images
+  - Record animations as MP4/WebM
+  - Multiple resolution presets up to 8K
+  - Various aspect ratio options
 
-## Getting Started
+- **Field Manipulators**:
+  - Gravity Wells
+  - Repulsors
+  - Vortexes
+  - Turbulence Zones
+  - Freeze Zones
+  - Respawn Points
+  - Critical Mass Explosions
 
-### Prerequisites
+- **Color Palettes**:
+  - Original
+  - Sunset
+  - Ocean
+  - Forest
+  - Neon
+  - Patriotic
+  - And more...
 
-- Node.js (v18 or higher)
-- npm or yarn
+## Installation
 
-### Installation and Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/alphiephalphie/Mako.git
+   cd Mako
+   ```
 
-1. Clone and setup the project:
-```bash
-git clone [your-repository-url]
-cd mako
-npm install
-```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-2. Configure environment:
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
+3. Start the server:
+   ```bash
+   node server.js
+   ```
 
-3. Start the development server:
-```bash
-npm run dev
-```
+4. Open in your browser:
+   ```
+   http://localhost:3000
+   ```
 
-The application will be available at `http://localhost:3000`
+## Usage
 
-## Built With
+1. **Basic Controls**:
+   - ▶️ Play/Pause: Start or stop the art generation
+   - 🕒 Recording: Click to cycle through recording durations
+   - ✎ New: Create new artwork with current settings
+   - ⤓ Save: Export current artwork as PNG
 
-- Express - Web application framework
-- Vanilla JavaScript - Core functionality
-- CSS3 - Modern styling
-- HTML5 - Semantic markup
+2. **Customization**:
+   - Adjust resolution and aspect ratio
+   - Select color palettes and movement styles
+   - Modify line properties and behaviors
+   - Add and position field manipulators
 
-## Development
+3. **Configuration Management**:
+   - Save current settings as named configurations
+   - Load previously saved configurations
+   - Delete unwanted configurations
 
-### Code Style
+## Progressive Web App
 
-- Use semantic HTML elements
-- Follow BEM methodology for CSS
-- Keep components modular and reusable
-- Implement responsive design
+Mako is available as a Progressive Web App (PWA), offering:
+- Offline functionality
+- Install to home screen
+- Native app-like experience
+- Automatic updates
+
+## Technical Details
+
+- Built with Three.js for WebGL rendering
+- Node.js/Express backend for file handling
+- HTML5 Canvas for high-resolution exports
+- Service Workers for PWA functionality
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - See LICENSE file for details
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Acknowledgments
+
+- Three.js for the powerful 3D rendering capabilities
+- Flow field algorithms inspired by various generative art techniques
+- Color palettes curated for artistic expression
