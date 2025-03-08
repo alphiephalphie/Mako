@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mako</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="controls">
+        <div class="control-buttons">
+            <div class="main-controls">
+                <button id="startDrawing" title="Start/Stop Drawing (Play/Pause)">▶</button>
+                <div class="record-time" title="Click to cycle through recording durations">🕒 <span id="recordSeconds">15s</span></div>
+                <button id="newArtwork" title="Create new artwork with current settings">✎</button>
+                <button id="saveArtwork" title="Save current artwork as PNG" style="font-size: 18px">⤓</button>
+            </div>
+
+            <div class="config-controls">
+                <button id="saveConfig" aria-label="Save Configuration" title="Save current settings as a named configuration">⊕</button>
+                <select id="configSelect" title="Select a saved configuration to load">
+                    <option value="">Load Config...</option>
+                </select>
+                <button id="deleteConfig" aria-label="Delete Configuration" title="Delete the selected configuration">⊖</button>
+        </div>
+
+            <!-- Hidden select that we'll control via the record-time display -->
+            <select id="recordingLength" style="display: none;">
+                    <option value="0">No Recording</option>
+                <option value="5">5s</option>
+                <option value="10">10s</option>
+                <option value="15" selected>15s</option>
+                <option value="30">30s</option>
+                <option value="60">60s</option>
+                </select>
+
+            <div class="control-section-top">
+                <div class="control-row">
+                    <label>Resolution
+                        <select id="resolutionSelect" data-tooltip="Higher resolution = larger file size">
+                            <option value="2000">2K</option>
+                            <option value="3000">3K</option>
+                            <option value="4000">4K</option>
+                            <option value="6000">6K</option>
+                            <option value="8000">8K</option>
+                    </select>
+                </label>
+                </div>
+                <div class="control-row">
+                    <label>Aspect Ratio
+                        <select id="aspectRatio">
+                            <option value="1:1">Square (1:1)</option>
+                            <option value="9:16">iPhone/Story (9:16)</option>
+                            <option value="4:5">Instagram Portrait (4:5)</option>
+                            <option value="16:9">Landscape (16:9)</option>
+                            <option value="3:2">Classic Photo (3:2)</option>
+                            <option value="2:7">Bookmark (2:7)</option>
+                        </select>
+                </label>
+            </div>
+            <div class="utility-controls">
+                <button id="saveArtwork">Save</button>
+                <button id="newArtwork">New</button>
+                    <button id="saveConfig">Save Config</button>
+                    <select id="configSelect">
+                        <option value="">Load Config...</option>
+                    </select>
+                    <button id="deleteConfig">Delete Config</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls-scroll">
+            <div class="controls-grid">
+                <!-- Left Column: Main Controls -->
+                <div>
+                    <label>Style
+                        <select id="algorithmSelect">
+                            <option value="flowFields">Flow Fields</option>
+                        </select>
+                    </label>
+
+                    <label>Color Palette
+                        <select id="paletteSelect">
+                            <option value="original">Original</option>
+                            <option value="sunset">Sunset</option>
+                            <option value="ocean">Ocean</option>
+                            <option value="forest">Forest</option>
+                            <option value="neon">Neon</option>
+                            <option value="patriotic">Patriotic</option>
+                        </select>
+                    </label>
+
+                    <label>Movement Style
+                        <select id="movementStyle">
+                            <option value="free">Free Movement</option>
+                            <option value="orthogonal">90° Turns Only</option>
+                            <option value="diagonal">45° Angles Only</option>
+                            <option value="spiral">Spiral Tendency</option>
+                            <option value="vine">Vine Growth</option>
+                            <option value="dna">DNA Helix</option>
+                            <option value="crystal">Crystal Growth</option>
+                            <option value="liquid">Liquid Flow</option>
+                        </select>
+                    </label>
+
+                    <label>Line Width Distribution
+                        <select id="lineStyle">
+                            <option value="uniform">Uniform</option>
+                            <option value="random">Random</option>
+                            <option value="speed">Speed-based</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="dna">DNA</option>
+                        </select>
+                    </label>
+
+                    <label>Max Line Width
+                        <input type="range" id="maxLineWidth" min="1" max="15" value="5">
+                        <span id="maxLineWidthValue">5</span>
+                    </label>
+
+                    <label>Number of Lines
+                        <input type="range" id="lineCount" min="10" max="100" value="30">
+                        <span id="lineCountValue">30</span>
+                    </label>
+
+                    <label>Movement Speed
+                        <input type="range" id="moveSpeed" min="1" max="20" value="10">
+                    </label>
+
+                    <label>Turn Frequency
+                        <input type="range" id="turnFrequency" min="1" max="100" value="20">
+                    </label>
+
+                    <label>Options
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="fadeTrails">
+                                Fade Old Trails
+                            </label>
+                            <label>
+                                <input type="checkbox" id="avoidCrossing" checked>
+                                Avoid Crossing
+                            </label>
+                        </div>
+                    </label>
+                    
+                    <label>Limiter
+                        <select id="limiterType">
+                            <option value="none">No Limit</option>
+                            <option value="turns">Number of Turns</option>
+                            <option value="time">Time Duration</option>
+                            <option value="distance">Total Distance</option>
+                            <option value="coverage">Canvas Coverage</option>
+                            <option value="crossings">Number of Crossings</option>
+                            <option value="layers">Layer Depth</option>
+                        </select>
+                        
+                        <div id="limiterValue" class="limiter-input" style="display: none;">
+                            <input type="range" id="limiterRange" min="1" max="100" value="50">
+                            <span id="limiterDisplay">50</span>
+                            <span id="limiterUnit"></span>
+                        </div>
+                    </label>
+                    
+                    <label>Trail Style
+                        <select id="trailStyle">
+                            <option value="none">No Trails</option>
+                            <option value="full">Full Trails</option>
+                            <option value="fade">Fade Trails</option>
+                            <option value="pulse">Pulsing Trails</option>
+                            <option value="length">Length Fade</option>
+                            <option value="glow">Glowing Trails</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- Right Column: Manipulators -->
+                <div>
+                    <label>Active Manipulator
+                        <select id="manipulatorSelect">
+                            <option value="none">None</option>
+                            <option value="gravity">Gravity Well</option>
+                            <option value="repel">Repulsor</option>
+                            <option value="vortex">Vortex</option>
+                            <option value="turbulence">Turbulence</option>
+                            <option value="freeze">Freeze Zone</option>
+                            <option value="respawn">Respawn Point</option>
+                            <option value="explosion">Critical Mass</option>
+                        </select>
+                    </label>
+
+                    <div id="manipulatorControls">
+                        <div class="manipulator-grid">
+                            <button class="position-btn" data-position="top-left" title="Place manipulator in top-left">↖</button>
+                            <button class="position-btn" data-position="top" title="Place manipulator at top">↑</button>
+                            <button class="position-btn" data-position="top-right" title="Place manipulator in top-right">↗</button>
+                            <button class="position-btn" data-position="left" title="Place manipulator on left">←</button>
+                            <button class="position-btn" data-position="center" title="Place manipulator in center">●</button>
+                            <button class="position-btn" data-position="right" title="Place manipulator on right">→</button>
+                            <button class="position-btn" data-position="bottom-left" title="Place manipulator in bottom-left">↙</button>
+                            <button class="position-btn" data-position="bottom" title="Place manipulator at bottom">↓</button>
+                            <button class="position-btn" data-position="bottom-right" title="Place manipulator in bottom-right">↘</button>
+                        </div>
+
+                        <label>Radius
+                            <input type="range" id="manipulatorRadius" min="1" max="50" value="15">
+                            <span id="manipulatorRadiusValue">15</span>
+                        </label>
+
+                        <label>Power
+                            <input type="range" id="manipulatorPower" min="1" max="100" value="50">
+                            <span id="manipulatorPowerValue">50</span>
+                        </label>
+
+                        <label>Critical Mass Threshold
+                            <input type="range" id="criticalMassThreshold" min="1" max="50" value="10">
+                            <span id="criticalMassThresholdValue">10</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Add color palettes at the top with the FlowFields configuration
+        const ColorPalettes = {
+            original: {
+                name: 'Original',
+                colors: [
+                    '#264653', // Deep blue
+                    '#2a9d8f', // Teal
+                    '#e76f51', // Terracotta
+                    '#bc6c25', // Rust
+                    '#457b9d', // Steel blue
+                    '#6d597a', // Muted purple
+                ]
+            },
+            patriotic: {
+                name: 'Patriotic',
+                colors: [
+                    '#FF0000', // Bright red
+                    '#0000FF'  // Bright blue
+                ]
+            },
+            sunset: {
+                name: 'Sunset',
+                colors: [
+                    '#ff7b00', // Orange
+                    '#ff8800', // Light orange
+                    '#ff9500', // Peach
+                    '#ffa200', // Golden
+                    '#ffaa00', // Amber
+                    '#ffb700', // Deep yellow
+                ]
+            },
+            ocean: {
+                name: 'Ocean',
+                colors: [
+                    '#006d77', // Deep teal
+                    '#83c5be', // Light teal
+                    '#edf6f9', // White blue
+                    '#ffddd2', // Light pink
+                    '#e29578', // Coral
+                    '#00303d', // Dark blue
+                ]
+            },
+            forest: {
+                name: 'Forest',
+                colors: [
+                    '#344e41', // Dark green
+                    '#3a5a40', // Forest green
+                    '#588157', // Sage
+                    '#a3b18a', // Light sage
+                    '#dad7cd', // Light gray
+                    '#4a5759', // Gray green
+                ]
+            },
+            neon: {
+                name: 'Neon',
+                colors: [
+                    '#ff0080', // Hot pink
+                    '#ff00ff', // Magenta
+                    '#00ff00', // Lime
+                    '#00ffff', // Cyan
+                    '#ff8000', // Orange
+                    '#ffff00', // Yellow
+                ]
+            },
+            cellular: {
+                name: 'Cellular',
+                colors: [
+                    '#ff6b6b', // Membrane pink
+                    '#4ecdc4', // Mitochondria teal
+                    '#45b7d1', // Nucleus blue
+                    '#96ceb4', // Golgi green
+                    '#d4a373', // Endoplasmic brown
+                    '#9b5de5'  // Vesicle purple
+                ]
+            },
+            
+            bioluminescent: {
+                name: 'Bioluminescent',
+                colors: [
+                    '#00ff9f', // Bright algae
+                    '#00b8ff', // Deep sea blue
+                    '#2eff00', // Firefly green
+                    '#00fff2', // Jellyfish cyan
+                    '#08ff86', // Plankton
+                    '#0051ff'  // Deep water
+                ]
+            },
+            
+            autumn: {
+                name: 'Autumn',
+                colors: [
+                    '#ff6b35', // Orange
+                    '#f7c59f', // Peach
+                    '#efefd0', // Cream
+                    '#004e89', // Deep blue
+                    '#1a659e', // Steel blue
+                    '#7a2d1d'  // Brown
+                ]
+            }
+        };
+
+        // Add resolution presets for different aspect ratios
+        const ResolutionPresets = {
+            '1:1': [
+                { label: '2K', value: 2000 },
+                { label: '3K', value: 3000 },
+                { label: '4K', value: 4000 },
+                { label: '6K', value: 6000 },
+                { label: '8K', value: 8000 }
+            ],
+            '9:16': [
+                { label: '1080p', value: 1080 },
+                { label: '1350p', value: 1350 },
+                { label: '2160p', value: 2160 },
+                { label: '2700p', value: 2700 },
+                { label: '4320p', value: 4320 }
+            ],
+            '4:5': [
+                { label: '1350p', value: 1350 },
+                { label: '1800p', value: 1800 },
+                { label: '2700p', value: 2700 },
+                { label: '3600p', value: 3600 },
+                { label: '4500p', value: 4500 }
+            ],
+            '16:9': [
+                { label: '1080p', value: 1080 },
+                { label: '1440p', value: 1440 },
+                { label: '2160p', value: 2160 },
+                { label: '4320p', value: 4320 },
+                { label: '8640p', value: 8640 }
+            ],
+            '3:2': [
+                { label: '1800p', value: 1800 },
+                { label: '2400p', value: 2400 },
+                { label: '3600p', value: 3600 },
+                { label: '4800p', value: 4800 },
+                { label: '7200p', value: 7200 }
+            ],
+            '2:7': [
+                { label: '600p', value: 600 },    // 600x2100
+                { label: '800p', value: 800 },    // 800x2800
+                { label: '1000p', value: 1000 },  // 1000x3500
+                { label: '1200p', value: 1200 },  // 1200x4200
+                { label: '1400p', value: 1400 }   // 1400x4900
+            ]
+        };
+
+        // Update FlowFieldsConfig to use dynamic bounds
+        const FlowFieldsConfig = {
+            colorPalette: ColorPalettes.original.colors,
+            lineWidths: [1, 2, 3],  // Reduced from [2, 4, 8]
+            numObjects: 30,
+            bounds: 14,
+            speed: 0.1,
+            minDistanceForTrail: 0.2,
+            opacity: 0.6,
+            
+            // New configuration options
+            movementStyle: 'free',
+            lineStyle: 'uniform',
+            turnFrequency: 0.02,
+            fadeTrails: false,
+            avoidCrossing: true,
+            
+            // Movement patterns for different styles
+            getNextDirection(currentAngle) {
+                switch(this.movementStyle) {
+                    case 'circuit':
+                        // Pass current position from the object being updated
+                        return this.getNextCircuitDirection({x: 0, y: 0}, currentAngle);
+                        // We'll need to update this to use the actual object position
+                    case 'orthogonal':
+                        return Math.round(Math.random() * 4) * (Math.PI/2);
+                    case 'diagonal':
+                        return Math.round(Math.random() * 8) * (Math.PI/4);
+                    case 'spiral':
+                        return currentAngle + (Math.PI/8);
+                    case 'vine':
+                        const tendril = Math.random() < this.vineTendrilFrequency ? 
+                            Math.sin(Date.now() * 0.001) * Math.PI/2 : 0;
+                        return currentAngle + 
+                            Math.sin(Date.now() * 0.001) * 0.2 + // Gentle swaying
+                            tendril + // Occasional curling
+                            (Math.random() - 0.5) * 0.1; // Slight randomness
+                    case 'bees':
+                        // Add occasional loops and more natural bee movement
+                        if (Math.random() < this.beeLoopChance) {
+                            // Create a full loop
+                            return currentAngle + Math.PI * 2 * (Math.random() > 0.5 ? 1 : -1);
+                        }
+                        // Normal bee wiggle with more natural curves
+                        return currentAngle + 
+                            Math.sin(Date.now() * this.beeWiggleSpeed) * this.beeWiggleAmount +
+                            Math.cos(Date.now() * this.beeWiggleSpeed * 1.5) * this.beeWiggleAmount * 0.5 +
+                            (Math.random() - 0.5) * 0.3;
+                    case 'ribbons':
+                        // Move existing 'calligraphy' code here
+                        const flourish = Math.random() < 0.05 ? 
+                            Math.sin(Date.now() * 0.001) * Math.PI : 0;
+                        return currentAngle + 
+                            Math.sin(Date.now() * 0.0005) * 0.3 +
+                            flourish +
+                            (Math.random() - 0.5) * 0.1;
+                    case 'calligraphy':
+                        // New brush-like movement
+                        return currentAngle + 
+                            Math.sin(Date.now() * 0.001) * 0.4 + // Smooth curves
+                            (Math.random() - 0.5) * 0.2;  // Natural variation
+                    case 'dna':
+                        // Calculate base movement along helix
+                        const time = Date.now() * 0.001;
+                        const verticalComponent = Math.PI/2; // Upward movement
+                        const horizontalComponent = Math.cos(time * this.dnaFrequency) * this.dnaAmplitude;
+                        return Math.atan2(verticalComponent, horizontalComponent);
+                    case 'crystal':
+                        // Follow crystal lattice angles
+                        const baseAngle = this.crystalAngleSteps[
+                            Math.floor(Math.random() * this.crystalAngleSteps.length)
+                        ];
+                        // Convert to radians with minimal variation
+                        return (baseAngle * Math.PI / 180) + (Math.random() - 0.5) * 0.05;
+                    case 'liquid':
+                        // Enhanced fluid-like movement for top-down view
+                        const flowTime = Date.now() * this.liquidFlow.timeScale;
+                        const pos = this.currentPosition || new THREE.Vector2();
+                        
+                        // Create circular flow field using perlin-like noise
+                        const flowAngleX = Math.sin(pos.x * this.liquidFlow.scale + flowTime) * 
+                                         Math.cos(pos.y * this.liquidFlow.scale + flowTime * 0.7);
+                        const flowAngleY = Math.cos(pos.x * this.liquidFlow.scale + flowTime * 0.8) * 
+                                         Math.sin(pos.y * this.liquidFlow.scale + flowTime * 1.2);
+                        const flowAngle = Math.atan2(flowAngleY, flowAngleX);
+                        
+                        // Blend current direction with flow field
+                        const targetAngle = currentAngle * (1 - this.liquidFlow.strength) + 
+                                          flowAngle * this.liquidFlow.strength;
+                        
+                        return targetAngle;
+                    default:
+                        return Math.random() * Math.PI * 2;
+                }
+            },
+            
+            // Update base line widths to be more substantial
+            maxLineWidth: 15,  // Default max width matches UI slider
+            
+            // Simplified line width calculation for more predictable results
+            getLineWidth(baseWidth, speed, position) {
+                // Scale the base width to match the UI range (1-15)
+                let width = baseWidth * 0.1; // Scale down for better control
+                
+                switch(this.lineStyle) {
+                    case 'random':
+                        return width * (0.5 + Math.random());
+                    case 'speed':
+                        return width * (0.5 + speed);
+                    case 'gradient':
+                        const distanceFromCenter = position.length() / this.bounds.x;
+                        return width * (0.2 + distanceFromCenter);
+                    case 'calligraphy':
+                        // Calculate brush pressure based on speed and direction change
+                        const currentVelocity = new THREE.Vector2(
+                            Math.cos(this.lastAngle) * speed,
+                            Math.sin(this.lastAngle) * speed
+                        );
+                        
+                        if (this.lastBrushPos) {
+                            const movement = position.clone().sub(this.lastBrushPos);
+                            const angle = Math.abs(movement.angle() - this.brushVelocity.angle());
+                            // More pressure on turns, less on straight lines
+                            this.brushPressure = Math.min(
+                                1.0,
+                                this.brushPressure * 0.95 + 
+                                (angle > 0.1 ? 0.8 : 0.2)
+                            );
+                        }
+                        
+                        this.lastBrushPos = position.clone();
+                        this.brushVelocity = currentVelocity;
+                        
+                        // Return varying width based on pressure
+                        return width * (0.5 + this.brushPressure * 2.5);
+                    case 'ribbons':
+                        // Vary width based on movement with more dramatic changes
+                        const pressureVariation = Math.sin(Date.now() * 0.001) * 0.5;
+                        const speedFactor = Math.max(0.2, Math.min(1, speed / this.speed));
+                        return width * (1 + pressureVariation) * speedFactor * 2;
+                    case 'dna':
+                        // Thicker for main strands, thinner for base pairs
+                        const isBasePair = position.x % 2 < 0.1;
+                        return width * (isBasePair ? 0.5 : 1.5);
+                    case 'crystal':
+                        // Sharp transitions in width for crystalline appearance
+                        return width * (1 + Math.floor(Math.sin(position.length() * 2) * 2) * 0.5);
+                    case 'liquid':
+                        // Create organic, flowing width variations
+                        const liquidTime = Date.now() * 0.001;
+                        const flow = Math.sin(liquidTime + position.x * 0.2) * 
+                                    Math.cos(liquidTime + position.y * 0.2);
+                        return width * (1 + flow * 0.5);
+                    default:
+                        return width;
+                }
+            },
+            
+            // Initialize limiter settings with defaults that won't stop immediately
+            limiterType: 'none',
+            limiterValue: 50,
+            turnCount: 0,
+            startTime: Date.now(),
+            totalDistance: 0,
+            crossingCount: 0,
+            coverageGrid: new Array(32).fill(0).map(() => new Array(32).fill(0)),
+            maxLayers: 5,
+            
+            // Reset limiter tracking
+            resetLimiters() {
+                this.turnCount = 0;
+                this.startTime = Date.now();
+                this.totalDistance = 0;
+                this.crossingCount = 0;
+                this.coverageGrid = new Array(32).fill(0).map(() => new Array(32).fill(0));
+            },
+            
+            // Check if limit is reached
+            isLimitReached() {
+                if (this.limiterType === 'none') return false;
+                
+                switch(this.limiterType) {
+                    case 'turns':
+                        return this.turnCount >= this.limiterValue;
+                    case 'time':
+                        return (Date.now() - this.startTime) / 1000 >= this.limiterValue;
+                    case 'distance':
+                        return this.totalDistance >= this.limiterValue * 100;
+                    case 'coverage':
+                        const covered = this.coverageGrid.flat().filter(x => x > 0).length;
+                        return (covered / (32 * 32)) * 100 >= this.limiterValue;
+                    case 'crossings':
+                        return this.crossingCount >= this.limiterValue;
+                    case 'layers':
+                        return this.coverageGrid.flat().some(x => x >= this.limiterValue);
+                    default:
+                        return false;
+                }
+            },
+            
+            // Calculate bounds based on aspect ratio
+            getBounds(aspectRatio) {
+                const baseSize = 14;
+                return {
+                    x: baseSize * Math.max(1, aspectRatio.width / aspectRatio.height),
+                    y: baseSize * Math.max(1, aspectRatio.height / aspectRatio.width)
+                };
+            },
+
+            // Add vine growth parameters
+            vineGrowthSpeed: 0.05,
+            vineTendrilFrequency: 0.1,
+            vineLeafSize: 0.2,
+            
+            // Add leaf creation
+            createLeaf(position, angle, size) {
+                const leafShape = new THREE.Shape();
+                // Simple leaf shape
+                leafShape.moveTo(0, 0);
+                leafShape.quadraticCurveTo(size/2, size, 0, size*2);
+                leafShape.quadraticCurveTo(-size/2, size, 0, 0);
+                
+                const geometry = new THREE.ShapeGeometry(leafShape);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)],
+                    transparent: true,
+                    opacity: 0.6
+                });
+                
+                const leaf = new THREE.Mesh(geometry, material);
+                leaf.position.copy(position);
+                leaf.rotation.z = angle;
+                return leaf;
+            },
+
+            // Circuit board specific settings
+            circuitGridSize: 1.0,      // Larger grid spacing
+            viaChance: 0.3,           // More vias
+            padSize: 1.5,             // Larger pads
+            minCircuitLength: 2,      // Shorter minimum length
+            maxLineWidth: 15,         // Updated from 2500 to match UI max
+            
+            // Track occupied positions for circuit board style
+            occupiedPositions: new Set(),
+            viaPositions: new Set(),
+            
+            createCircuitElement(position, type) {
+                const geometry = new THREE.BufferGeometry();
+                let vertices;
+                
+                switch(type) {
+                    case 'resistor':
+                        vertices = [
+                            -0.3, -0.15, 0,  0.3, -0.15, 0,
+                            0.3, 0.15, 0,   -0.3, 0.15, 0,
+                            -0.3, -0.15, 0,  // Close the rectangle
+                            // Add zigzag inside
+                            -0.2, 0, 0,    -0.1, -0.1, 0,
+                            0, 0, 0,       0.1, -0.1, 0,
+                            0.2, 0, 0
+                        ];
+                        break;
+                    case 'capacitor':
+                        vertices = [
+                            -0.2, -0.15, 0,  -0.2, 0.15, 0,
+                            0.2, -0.15, 0,   0.2, 0.15, 0
+                        ];
+                        break;
+                    case 'via':
+                        // Create circular via point
+                        const segments = 8;
+                        vertices = [];
+                        for (let i = 0; i <= segments; i++) {
+                            const angle = (i / segments) * Math.PI * 2;
+                            vertices.push(
+                                Math.cos(angle) * 0.15, 
+                                Math.sin(angle) * 0.15,
+                                0
+                            );
+                        }
+                        break;
+                    case 'termination':
+                        vertices = [
+                            -0.15, -0.15, 0,  0.15, -0.15, 0,
+                            0.15, 0.15, 0,   -0.15, 0.15, 0,
+                            -0.15, -0.15, 0   // Close the square
+                        ];
+                        break;
+                }
+                
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                const material = new THREE.LineBasicMaterial({ 
+                    color: this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)],
+                    linewidth: 2
+                });
+                
+                const element = new THREE.Line(geometry, material);
+                element.position.copy(position);
+                return element;
+            },
+            
+            isPositionOccupied(position) {
+                const key = `${Math.round(position.x/this.circuitGridSize)},${Math.round(position.y/this.circuitGridSize)}`;
+                return this.occupiedPositions.has(key);
+            },
+            
+            markPositionOccupied(position) {
+                const key = `${Math.round(position.x/this.circuitGridSize)},${Math.round(position.y/this.circuitGridSize)}`;
+                this.occupiedPositions.add(key);
+            },
+            
+            getNextCircuitDirection(currentPos, currentAngle) {
+                // Snap to grid
+                const gridX = Math.round(currentPos.x / this.circuitGridSize) * this.circuitGridSize;
+                const gridY = Math.round(currentPos.y / this.circuitGridSize) * this.circuitGridSize;
+                
+                // More aggressive termination
+                if (Math.random() < 0.15) { // 15% chance to terminate at any point
+                    return null;
+                }
+                
+                // Check available directions (90-degree turns only)
+                const directions = [0, Math.PI/2, Math.PI, -Math.PI/2];
+                const available = directions.filter(angle => {
+                    const nextPos = new THREE.Vector2(
+                        gridX + Math.cos(angle) * this.circuitGridSize,
+                        gridY + Math.sin(angle) * this.circuitGridSize
+                    );
+                    return !this.isPositionOccupied(nextPos);
+                });
+                
+                if (available.length === 0 || available.length === 1) {
+                    // Terminate if no options or only one option
+                    return null;
+                }
+                
+                // Prefer continuing straight if possible
+                if (available.includes(currentAngle)) {
+                    return Math.random() < 0.7 ? currentAngle : available[Math.floor(Math.random() * available.length)];
+                }
+                
+                return available[Math.floor(Math.random() * available.length)];
+            },
+
+            // Bee movement parameters
+            beeWiggleSpeed: 0.002,    // Slower wiggle
+            beeWiggleAmount: 0.8,     // More pronounced wiggle
+            beeLoopChance: 0.05,      // 5% chance to make a loop
+            beeDashLength: 0.3,       // Length of dashes in the trail
+            beeGapLength: 0.2,        // Length of gaps between dashes
+            
+            beeSprite: null,
+            
+            setupBeeSprite() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw bee body
+                ctx.fillStyle = '#FFD700';  // Golden yellow
+                ctx.beginPath();
+                ctx.ellipse(32, 32, 20, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw stripes
+                ctx.fillStyle = '#000';
+                for (let i = -1; i <= 1; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(32 + i * 8, 32, 3, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw wings
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(32 - 5, 32 - 10, 8, 4, -Math.PI/4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(32 + 5, 32 - 10, 8, 4, Math.PI/4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true
+                });
+                this.beeSprite = new THREE.Sprite(material);
+                this.beeSprite.scale.set(1, 1, 1);
+            },
+
+            // Flower settings
+            flowers: [],
+            flowerDensity: 0.1,  // Flowers per unit area
+            flowerTypes: [
+                {
+                    name: 'daisy',
+                    petals: 8,
+                    size: 0.8,
+                    colors: ['#FFFFFF', '#FFEB3B', '#FFF9C4']
+                },
+                {
+                    name: 'sunflower',
+                    petals: 12,
+                    size: 1.2,
+                    colors: ['#FDD835', '#F57F17', '#5D4037']
+                },
+                {
+                    name: 'wildflower',
+                    petals: 5,
+                    size: 0.6,
+                    colors: ['#E91E63', '#9C27B0', '#673AB7']
+                }
+            ],
+
+            createFlower(position, type) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw petals
+                ctx.save();
+                ctx.translate(64, 64);
+                for (let i = 0; i < type.petals; i++) {
+                    ctx.fillStyle = type.colors[0];
+                    ctx.beginPath();
+                    ctx.ellipse(type.size * 20, 0, 15, 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.rotate((Math.PI * 2) / type.petals);
+                }
+                ctx.restore();
+                
+                // Draw center
+                ctx.fillStyle = type.colors[1];
+                ctx.beginPath();
+                ctx.arc(64, 64, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add detail to center
+                ctx.fillStyle = type.colors[2];
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2;
+                    const x = 64 + Math.cos(angle) * 8;
+                    const y = 64 + Math.sin(angle) * 8;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true
+                });
+                const sprite = new THREE.Sprite(material);
+                sprite.position.copy(position);
+                sprite.scale.set(type.size, type.size, 1);
+                
+                return sprite;
+            },
+
+            placeFlowers(scene, bounds) {
+                this.flowers = [];
+                const area = bounds.x * bounds.y * 4;
+                const numFlowers = Math.floor(area * this.flowerDensity);
+                
+                for (let i = 0; i < numFlowers; i++) {
+                    const x = (Math.random() - 0.5) * bounds.x * 1.8;
+                    const y = (Math.random() - 0.5) * bounds.y * 1.8;
+                    const type = this.flowerTypes[Math.floor(Math.random() * this.flowerTypes.length)];
+                    
+                    const flower = this.createFlower(new THREE.Vector3(x, y, -0.1), type);
+                    scene.add(flower);
+                    this.flowers.push({
+                        position: new THREE.Vector2(x, y),
+                        sprite: flower,
+                        type: type
+                    });
+                }
+            },
+
+            // Calligraphy specific settings
+            brushPressure: 0,
+            lastBrushPos: null,
+            brushVelocity: new THREE.Vector2(),
+            
+            createBrushStroke(position, angle, pressure) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                
+                // Create brush texture
+                ctx.fillStyle = '#000';
+                ctx.translate(32, 32);
+                ctx.rotate(angle);
+                
+                // Simulate brush bristles
+                for (let i = 0; i < 5; i++) {
+                    const spread = (i - 2) * 2;
+                    ctx.beginPath();
+                    ctx.ellipse(0, spread, 20 * pressure, 2 * pressure, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.needsUpdate = true;
+                return texture;
+            },
+
+            // DNA specific settings
+            dnaFrequency: 0.5,      // Frequency of helix oscillation
+            dnaAmplitude: 2.0,      // Width of helix
+            dnaBasePairChance: 0.2, // Chance to create base pair connection
+            dnaPartnerOffset: 3.14, // Offset for partner strand (π radians)
+
+            // Crystal settings
+            crystalAngleSteps: [0, 60, 120, 180, 240, 300], // Hexagonal crystal structure
+            crystalBranchChance: 0.1,     // Chance to create a branch
+            crystalMinLength: 2,          // Minimum length before branching
+            crystalMaxBranches: 3,        // Max branches from a single point
+            
+            // Update liquid simulation parameters
+            liquidViscosity: 0.3,
+            liquidTension: 0.8,
+            liquidDiffusion: 0.2,
+            liquidBleedRate: 0.05,
+            liquidDamping: 0.85,    // Controls energy loss on collision
+            liquidFlow: {           // Flow field parameters
+                scale: 0.2,         // Scale of the flow field
+                strength: 0.4,      // Strength of the flow field
+                timeScale: 0.001,   // Speed of flow field evolution
+                gravity: 0.05       // Gravity strength
+            },
+        };
+
+        class ArtEngine {
+            constructor() {
+                this.scene = new THREE.Scene();
+                
+                // Add overlay scene for manipulators
+                this.overlayScene = new THREE.Scene();
+                
+                // Get the selected aspect ratio
+                const aspectSelect = document.getElementById('aspectRatio');
+                const [width, height] = aspectSelect.value.split(':').map(Number);
+                const targetAspect = width / height;
+                
+                // Add bounds property
+                this.bounds = { x: 14, y: 14 };
+                
+                // Calculate viewport dimensions based on aspect ratio
+                const controlWidth = 300;
+                const maxWidth = window.innerWidth - controlWidth;
+                const maxHeight = window.innerHeight;
+                
+                let viewportWidth, viewportHeight;
+                
+                if (maxWidth / maxHeight > targetAspect) {
+                    // Height limited
+                    viewportHeight = maxHeight * 0.9; // Use 90% of available height
+                    viewportWidth = viewportHeight * targetAspect;
+                } else {
+                    // Width limited
+                    viewportWidth = maxWidth * 0.9; // Use 90% of available width
+                    viewportHeight = viewportWidth / targetAspect;
+                }
+                
+                // Create renderer
+                this.renderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    preserveDrawingBuffer: true,
+                    alpha: true
+                });
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.setSize(viewportWidth, viewportHeight, false);
+                
+                // Set up camera with proper aspect ratio
+                const viewSize = 15;
+                this.camera = new THREE.OrthographicCamera(
+                    -viewSize * targetAspect, viewSize * targetAspect,
+                    viewSize, -viewSize,
+                    1, 1000
+                );
+                
+                // Create a white background plane
+                const planeGeometry = new THREE.PlaneGeometry(
+                    viewSize * 2 * targetAspect,
+                    viewSize * 2
+                );
+                const planeMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    side: THREE.DoubleSide
+                });
+                const backgroundPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+                backgroundPlane.position.z = -1;
+                this.scene.add(backgroundPlane);
+                
+                // Set renderer background to transparent to show the canvas background
+                this.renderer.setClearColor(0x000000, 0);
+                
+                // Insert canvas
+                document.body.appendChild(this.renderer.domElement);
+                
+                // Add resize handler
+                window.addEventListener('resize', () => {
+                    const maxWidth = window.innerWidth - controlWidth;
+                    const maxHeight = window.innerHeight;
+                    
+                    let viewportWidth, viewportHeight;
+                    
+                    if (maxWidth / maxHeight > targetAspect) {
+                        viewportHeight = maxHeight * 0.9;
+                        viewportWidth = viewportHeight * targetAspect;
+                    } else {
+                        viewportWidth = maxWidth * 0.9;
+                        viewportHeight = viewportWidth / targetAspect;
+                    }
+                    
+                    this.renderer.setSize(viewportWidth, viewportHeight, false);
+                    
+                    // Update background plane size
+                    const planeGeometry = new THREE.PlaneGeometry(
+                        viewSize * 2 * targetAspect,
+                        viewSize * 2
+                    );
+                    backgroundPlane.geometry.dispose();
+                    backgroundPlane.geometry = planeGeometry;
+                });
+                
+                this.objects = [];
+                this.trails = [];
+                this.isDrawing = false;
+                
+                // Position camera
+                this.camera.position.z = 10;
+                this.camera.lookAt(0, 0, 0);
+                
+                this.setupManipulatorControls();
+                this.createObjects();
+                this.animate();
+                
+                // Add aspect ratio change listener
+                aspectSelect.addEventListener('change', () => {
+                    const [width, height] = aspectSelect.value.split(':').map(Number);
+                    const newAspect = width / height;
+                    
+                    // Update camera
+                    const viewSize = 15;
+                    this.camera.left = -viewSize * newAspect;
+                    this.camera.right = viewSize * newAspect;
+                    this.camera.updateProjectionMatrix();
+                    
+                    // Trigger resize to update viewport
+                    window.dispatchEvent(new Event('resize'));
+                    
+                    // Reset drawing when aspect ratio changes
+                    this.resetDrawing();
+                });
+            }
+
+            setupManipulatorControls() {
+                this.manipulators = [];
+                this.mousePosition = new THREE.Vector2();
+                
+                // Add position button click handlers
+                document.querySelectorAll('.position-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const manipType = document.getElementById('manipulatorSelect').value;
+                        if (manipType === 'none') return;
+
+                        const position = button.dataset.position;
+                        const radius = parseInt(document.getElementById('manipulatorRadius').value);
+                        const power = parseInt(document.getElementById('manipulatorPower').value) / 50;
+                        
+                        // Calculate position based on button
+                        const x = position.includes('left') ? -this.bounds.x * 0.8 :
+                                position.includes('right') ? this.bounds.x * 0.8 : 0;
+                        const y = position.includes('top') ? this.bounds.y * 0.8 :
+                                position.includes('bottom') ? -this.bounds.y * 0.8 : 0;
+                        
+                        this.addManipulator({
+                            type: manipType,
+                            position: new THREE.Vector2(x, y),
+                            radius: radius,
+                            power: power
+                        });
+                    });
+                });
+
+                // Add event listeners for manipulator controls
+                document.getElementById('manipulatorRadius').addEventListener('input', (e) => {
+                    document.getElementById('manipulatorRadiusValue').textContent = e.target.value;
+                });
+
+                document.getElementById('manipulatorPower').addEventListener('input', (e) => {
+                    document.getElementById('manipulatorPowerValue').textContent = e.target.value;
+                });
+            }
+
+            createObjects() {
+                // Clear existing objects
+                this.objects.forEach(obj => this.scene.remove(obj));
+                this.objects = [];
+
+                const bounds = { x: 14, y: 14 };
+                const numObjects = FlowFieldsConfig.numObjects;
+                
+                for (let i = 0; i < numObjects; i++) {
+                    const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+                    const colorIndex = Math.floor(Math.random() * FlowFieldsConfig.colorPalette.length);
+                    const material = new THREE.MeshBasicMaterial({
+                        color: new THREE.Color(FlowFieldsConfig.colorPalette[colorIndex]),
+                        transparent: true,
+                        opacity: 0.8
+                    });
+
+                    const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Start at random edge
+                    const edge = Math.floor(Math.random() * 4);
+                    const pos = (Math.random() - 0.5) * 28;
+                    
+                    switch(edge) {
+                        case 0: mesh.position.set(-bounds.x, pos, 0); break;  // Left
+                        case 1: mesh.position.set(bounds.x, pos, 0); break;   // Right
+                        case 2: mesh.position.set(pos, -bounds.y, 0); break;  // Bottom
+                        case 3: mesh.position.set(pos, bounds.y, 0); break;   // Top
+                    }
+
+                    // Set initial velocity pointing inward
+                    const speed = 0.1;
+                    switch(edge) {
+                        case 0: mesh.velocity = new THREE.Vector3(speed, (Math.random() - 0.5) * speed, 0); break;  // Moving right
+                        case 1: mesh.velocity = new THREE.Vector3(-speed, (Math.random() - 0.5) * speed, 0); break; // Moving left
+                        case 2: mesh.velocity = new THREE.Vector3((Math.random() - 0.5) * speed, speed, 0); break;  // Moving up
+                        case 3: mesh.velocity = new THREE.Vector3((Math.random() - 0.5) * speed, -speed, 0); break; // Moving down
+                    }
+
+                    // Scale the line width to be between 0.5 and 1 times the max width
+                    const baseWidth = (Math.random() * 0.5 + 0.5) * FlowFieldsConfig.maxLineWidth;
+                    mesh.lineWidth = baseWidth;
+                    mesh.color = new THREE.Color(FlowFieldsConfig.colorPalette[colorIndex]);
+                    mesh.lastPoint = mesh.position.clone();
+
+                    this.objects.push(mesh);
+                    this.scene.add(mesh);
+                }
+            }
+
+            createTrailLine(points, color, width) {
+                if (points.length < 2) return;
+                
+                // Create a triangle strip for the line
+                const start = points[0];
+                const end = points[1];
+                
+                // Calculate direction vector and perpendicular
+                const direction = end.clone().sub(start);
+                const length = direction.length();
+                direction.normalize();
+                const perpendicular = new THREE.Vector3(-direction.y, direction.x, 0);
+                
+                // Create vertices for the triangle strip
+                const vertices = new Float32Array([
+                    // First triangle
+                    start.x + perpendicular.x * width/2, start.y + perpendicular.y * width/2, start.z,
+                    start.x - perpendicular.x * width/2, start.y - perpendicular.y * width/2, start.z,
+                    end.x + perpendicular.x * width/2, end.y + perpendicular.y * width/2, end.z,
+                    // Second triangle
+                    start.x - perpendicular.x * width/2, start.y - perpendicular.y * width/2, start.z,
+                    end.x - perpendicular.x * width/2, end.y - perpendicular.y * width/2, end.z,
+                    end.x + perpendicular.x * width/2, end.y + perpendicular.y * width/2, end.z,
+                ]);
+                
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+                const material = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.8,
+                    side: THREE.DoubleSide
+                });
+                
+                const line = new THREE.Mesh(geometry, material);
+                this.trails.push(line);
+                this.scene.add(line);
+            }
+
+            updateObjects() {
+                if (!this.isDrawing) return;
+
+                const bounds = { x: 14, y: 14 };
+                const currentTime = Date.now() * 0.001;
+
+                // Create spatial grid for density checking
+                const gridSize = 1; // Size of each grid cell
+                const densityGrid = new Map(); // Map to store particle counts
+
+                // First pass: count particles in grid cells
+                this.objects.forEach(obj => {
+                    const gridX = Math.floor(obj.position.x / gridSize);
+                    const gridY = Math.floor(obj.position.y / gridSize);
+                    const key = `${gridX},${gridY}`;
+                    densityGrid.set(key, (densityGrid.get(key) || 0) + 1);
+                });
+
+                // Check for critical mass explosions before updating particles
+                this.manipulators.forEach(manipulator => {
+                    if (manipulator.type === 'explosion') {
+                        const radius = (manipulator.radius / 50) * 28;
+                        const threshold = parseInt(document.getElementById('criticalMassThreshold').value);
+                        const currentTime = Date.now();
+                        
+                        // Only check for explosion if enough time has passed since last explosion
+                        if (!manipulator.lastExplosionTime || currentTime - manipulator.lastExplosionTime > 500) {
+                            // Count particles in manipulator radius
+                            let particleCount = 0;
+                            this.objects.forEach(obj => {
+                                if (obj.position.distanceTo(manipulator.position) < radius) {
+                                    particleCount++;
+                                }
+                            });
+
+                            // If density threshold reached, create explosion
+                            if (particleCount >= threshold) {
+                                manipulator.lastExplosionTime = currentTime;
+                                
+                                // Apply explosion force to all particles in radius
+                                this.objects.forEach(obj => {
+                                    const distance = obj.position.distanceTo(manipulator.position);
+                                    if (distance < radius) {
+                                        const toObj = new THREE.Vector2()
+                                            .subVectors(obj.position, manipulator.position);
+                                        const force = toObj.normalize().multiplyScalar(
+                                            manipulator.power * 0.4 * (1 - distance/radius)
+                                        );
+                                        obj.velocity.add(force);
+                                        
+                                        // Add some random spread
+                                        obj.velocity.x += (Math.random() - 0.5) * manipulator.power * 0.2;
+                                        obj.velocity.y += (Math.random() - 0.5) * manipulator.power * 0.2;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+
+                // Rest of updateObjects remains the same...
+
+                // Second pass: update particles and check for explosions
+                this.objects.forEach(obj => {
+                    FlowFieldsConfig.currentPosition = obj.position.clone();
+                    
+                    // Check for critical mass explosions
+                    const gridX = Math.floor(obj.position.x / gridSize);
+                    const gridY = Math.floor(obj.position.y / gridSize);
+                    const key = `${gridX},${gridY}`;
+                    const density = densityGrid.get(key) || 0;
+                    
+                    // Check manipulators for explosion zones
+                    this.manipulators.forEach(manipulator => {
+                        if (manipulator.type === 'explosion') {
+                            const distance = obj.position.distanceTo(manipulator.position);
+                            const threshold = parseInt(document.getElementById('criticalMassThreshold').value);
+                            
+                            if (distance < (manipulator.radius / 50) * 28 && density > threshold) {
+                                // Create explosion effect
+                                const explosionForce = 0.5 * manipulator.power;
+                                const angle = Math.atan2(obj.position.y - manipulator.position.y, 
+                                                       obj.position.x - manipulator.position.x);
+                                                       
+                                obj.velocity.x = Math.cos(angle) * explosionForce;
+                                obj.velocity.y = Math.sin(angle) * explosionForce;
+                                
+                                // Add some randomness to the explosion
+                                obj.velocity.x += (Math.random() - 0.5) * explosionForce * 0.5;
+                                obj.velocity.y += (Math.random() - 0.5) * explosionForce * 0.5;
+                            }
+                        }
+                    });
+
+                    // Rest of the existing updateObjects code...
+
+                    // Calculate manipulator influence for all movement styles
+                    const manipForce = this.calculateManipulatorInfluence(obj.position);
+                    
+                    // Store last manipulator force for persistence with stronger memory
+                    obj.lastManipForce = obj.lastManipForce || new THREE.Vector2(0, 0);
+                    obj.lastManipForce.lerp(manipForce, 0.4); // Increased lerp factor for more responsive forces
+                    
+                    // Add cumulative force effect
+                    const totalForce = manipForce.clone().add(obj.lastManipForce.multiplyScalar(0.5));
+                    
+                    // Check for special manipulator effects
+                    let freezeEffect = false;
+                    let shouldRespawn = false;
+                    
+                    this.manipulators.forEach(manipulator => {
+                        const distance = obj.position.distanceTo(manipulator.position);
+                        if (distance < manipulator.radius * 0.8) {
+                            if (manipulator.type === 'freeze' && manipulator.freezeZone) {
+                                freezeEffect = true;
+                            }
+                            if (manipulator.type === 'respawn' && manipulator.shouldRespawn) {
+                                shouldRespawn = true;
+                            }
+                        }
+                    });
+                    
+                    if (shouldRespawn) {
+                        // Respawn at a random position
+                        obj.position.set(
+                            (Math.random() - 0.5) * bounds.x * 2,
+                            (Math.random() - 0.5) * bounds.y * 2,
+                            0
+                        );
+                        obj.velocity.set(
+                            (Math.random() - 0.5) * FlowFieldsConfig.speed,
+                            (Math.random() - 0.5) * FlowFieldsConfig.speed,
+                            0
+                        );
+                    } else {
+                        // Get current angle and next direction
+                        const currentAngle = Math.atan2(obj.velocity.y, obj.velocity.x);
+                        const nextDirection = FlowFieldsConfig.getNextDirection(currentAngle);
+                        
+                        // Create base velocity
+                        const speed = FlowFieldsConfig.movementStyle === 'liquid' ? 
+                            FlowFieldsConfig.speed * 1.5 : FlowFieldsConfig.speed;
+                        
+                        let baseVelocity;
+                        if (FlowFieldsConfig.movementStyle === 'liquid') {
+                            baseVelocity = new THREE.Vector3(
+                                Math.cos(nextDirection) * speed,
+                                Math.sin(nextDirection) * speed,
+                                0
+                            );
+                            
+                            // Add manipulator influence
+                            const targetVelocity = baseVelocity.add(
+                                new THREE.Vector3(manipForce.x, manipForce.y, 0)
+                            );
+                            
+                            // Apply freeze effect if in a freeze zone
+                            if (freezeEffect) {
+                                targetVelocity.multiplyScalar(0.8); // Slow down particles
+                            }
+                            
+                            // Smoothly blend velocities
+                            obj.velocity.lerp(targetVelocity, FlowFieldsConfig.liquidFlow.viscosity || 0.3);
+                            
+                    // Update position
+                    obj.position.add(obj.velocity);
+
+                            // Handle fluid collisions with boundaries
+                            if (Math.abs(obj.position.x) > bounds.x) {
+                                obj.position.x = Math.sign(obj.position.x) * bounds.x;
+                                obj.velocity.x *= -0.7;
+                                obj.velocity.y += (Math.random() - 0.5) * 0.3;
+                            }
+                            
+                            if (Math.abs(obj.position.y) > bounds.y) {
+                                obj.position.y = Math.sign(obj.position.y) * bounds.y;
+                                obj.velocity.y *= -0.7;
+                                obj.velocity.x += (Math.random() - 0.5) * 0.3;
+                            }
+
+                            // Ensure minimum speed and add slight random movement
+                            const minSpeed = freezeEffect ? 0.005 : 0.02;
+                            const speed2 = obj.velocity.length();
+                            if (speed2 < minSpeed) {
+                                obj.velocity.normalize().multiplyScalar(minSpeed);
+                                if (!freezeEffect) {
+                                    obj.velocity.x += (Math.random() - 0.5) * 0.01;
+                                    obj.velocity.y += (Math.random() - 0.5) * 0.01;
+                                }
+                            }
+                        } else {
+                            // Handle other movement styles
+                            if (Math.random() < FlowFieldsConfig.turnFrequency) {
+                                if (nextDirection !== null) {
+                                    baseVelocity = new THREE.Vector3(
+                                        Math.cos(nextDirection) * speed,
+                                        Math.sin(nextDirection) * speed,
+                                        0
+                                    );
+                                    
+                                    // Add manipulator influence with style-specific blending
+                                    const manipVelocity = new THREE.Vector3(manipForce.x, manipForce.y, 0);
+                                    const blendFactor = 0.3; // Adjust this for different styles if needed
+                                    
+                                    baseVelocity.add(manipVelocity.multiplyScalar(blendFactor));
+                                    
+                                    // Apply freeze effect
+                                    if (freezeEffect) {
+                                        baseVelocity.multiplyScalar(0.8);
+                                    }
+                                    
+                                    baseVelocity.normalize().multiplyScalar(speed);
+                                    obj.velocity.copy(baseVelocity);
+                                }
+                    }
+
+                    // Update position
+                    obj.position.add(obj.velocity);
+
+                            // Regular boundary checks
+                    if (Math.abs(obj.position.x) > bounds.x) {
+                        obj.position.x = Math.sign(obj.position.x) * bounds.x;
+                        obj.velocity.x *= -1;
+                    }
+                    if (Math.abs(obj.position.y) > bounds.y) {
+                        obj.position.y = Math.sign(obj.position.y) * bounds.y;
+                        obj.velocity.y *= -1;
+                            }
+                        }
+                    }
+
+                    // Create trail with dynamic line width
+                    const distance = obj.position.distanceTo(obj.lastPoint);
+                    if (distance > FlowFieldsConfig.minDistanceForTrail) {
+                        const speed = obj.velocity.length();
+                        const width = FlowFieldsConfig.getLineWidth(obj.lineWidth, speed, obj.position);
+                        
+                        this.createTrailLine([
+                            obj.lastPoint.clone(),
+                            obj.position.clone()
+                        ], obj.color, width);
+                        obj.lastPoint = obj.position.clone();
+                    }
+                });
+
+                // Handle trail effects
+                const trailStyle = document.getElementById('trailStyle').value;
+                
+                switch(trailStyle) {
+                    case 'none':
+                        // Remove oldest trail
+                        if (this.trails.length > 0) {
+                            const oldTrail = this.trails.shift();
+                            this.scene.remove(oldTrail);
+                        }
+                        break;
+                        
+                    case 'fade':
+                    this.trails.forEach(trail => {
+                        if (trail.material.opacity > 0.1) {
+                                trail.material.opacity *= 0.995;
+                            }
+                        });
+                        break;
+                        
+                    case 'pulse':
+                        this.trails.forEach((trail, index) => {
+                            trail.material.opacity = 0.3 + Math.sin(currentTime * 2 + index * 0.1) * 0.2;
+                        });
+                        break;
+                        
+                    case 'length':
+                        const maxTrails = 100;
+                        this.trails.forEach((trail, index) => {
+                            trail.material.opacity = index / maxTrails;
+                        });
+                        if (this.trails.length > maxTrails) {
+                            const oldTrail = this.trails.shift();
+                            this.scene.remove(oldTrail);
+                        }
+                        break;
+                        
+                    case 'glow':
+                        this.trails.forEach((trail, index) => {
+                            const pulse = Math.sin(currentTime * 3 + index * 0.05) * 0.5 + 0.5;
+                            trail.material.opacity = 0.4 + pulse * 0.6;
+                            trail.material.color.multiplyScalar(1 + pulse * 0.2);
+                        });
+                        break;
+                }
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.updateObjects();
+                this.renderer.autoClear = true;
+                this.renderer.render(this.scene, this.camera);
+                this.renderer.autoClear = false;
+                this.renderer.render(this.overlayScene, this.camera);
+            }
+
+            startDrawing() {
+                this.isDrawing = true;
+                document.getElementById('startDrawing').textContent = '⏹';
+                
+                // Auto-start recording when drawing begins
+                const recordingLength = document.getElementById('recordingLength').value;
+                if (recordingLength > 0) {
+                    startRecording(parseInt(recordingLength));
+                }
+            }
+
+            resetDrawing() {
+                this.isDrawing = false;
+                document.getElementById('startDrawing').textContent = '▶';
+                
+                // Stop recording if it's in progress
+                if (isRecording) {
+                    stopRecording();
+                }
+
+                // Clear trails
+                this.trails.forEach(trail => this.scene.remove(trail));
+                this.trails = [];
+                
+                // Clear manipulators
+                this.manipulators.forEach(m => this.overlayScene.remove(m.mesh));
+                this.manipulators = [];
+                
+                // Reset objects
+                this.createObjects();
+            }
+
+            // Update bounce behavior in ArtEngine's updateObjects method
+            handleBoundaryCollision(obj, bounds) {
+                const damping = this.liquidDamping;
+                const minSpeed = 0.02;
+                
+                // Check horizontal bounds
+                if (Math.abs(obj.position.x) > bounds.x) {
+                    obj.position.x = Math.sign(obj.position.x) * bounds.x;
+                    obj.velocity.x *= -damping;
+                    // Add slight vertical spread on horizontal collision
+                    obj.velocity.y += (Math.random() - 0.5) * 0.2;
+                }
+                
+                // Check vertical bounds with asymmetric behavior
+                if (obj.position.y > bounds.y) {
+                    // Upper bound - more dampening
+                    obj.position.y = bounds.y;
+                    obj.velocity.y *= -damping * 0.8;
+                    obj.velocity.x *= 0.9; // Slow horizontal movement
+                } else if (obj.position.y < -bounds.y) {
+                    // Lower bound - pool and spread
+                    obj.position.y = -bounds.y;
+                    obj.velocity.y *= -damping * 0.5;
+                    obj.velocity.x *= 1.2; // Encourage horizontal spread
+                    // Add random upward motion for splashing
+                    if (Math.random() < 0.15 && Math.abs(obj.velocity.y) > 0.05) {
+                        obj.velocity.y = Math.random() * 0.3; // Stronger upward splash
+                    }
+                }
+                
+                // Ensure minimum speed
+                const speed = obj.velocity.length();
+                if (speed < minSpeed) {
+                    obj.velocity.normalize().multiplyScalar(minSpeed);
+                }
+            }
+
+            addManipulator(config) {
+                // Create manipulator icon based on type
+                const size = 0.5; // Fixed small size for all manipulator icons
+                let geometry, material;
+                
+                switch(config.type) {
+                    case 'gravity':
+                        // Create arrow pointing inward circle
+                        geometry = new THREE.RingGeometry(size * 0.6, size, 32);
+                        material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+                        const ring = new THREE.LineLoop(geometry, material);
+                        
+                        // Add arrows
+                        const arrowsGroup = new THREE.Group();
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2;
+                            const arrow = new THREE.ArrowHelper(
+                                new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0),
+                                new THREE.Vector3(Math.cos(angle) * size * 1.2, Math.sin(angle) * size * 1.2, 0),
+                                size * 0.4,
+                                0x00ff00
+                            );
+                            arrowsGroup.add(arrow);
+                        }
+                        ring.add(arrowsGroup);
+                        var mesh = ring;
+                        break;
+                        
+                    case 'repel':
+                        // Create arrow pointing outward circle
+                        geometry = new THREE.RingGeometry(size * 0.6, size, 32);
+                        material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+                        const repelRing = new THREE.LineLoop(geometry, material);
+                        
+                        // Add arrows pointing outward
+                        const repelArrows = new THREE.Group();
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2;
+                            const arrow = new THREE.ArrowHelper(
+                                new THREE.Vector3(-Math.cos(angle), -Math.sin(angle), 0),
+                                new THREE.Vector3(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6, 0),
+                                size * 0.4,
+                                0xff0000
+                            );
+                            repelArrows.add(arrow);
+                        }
+                        repelRing.add(repelArrows);
+                        mesh = repelRing;
+                            break;
+                        
+                    case 'vortex':
+                        // Create spiral effect
+                        const curve = new THREE.SplineCurve(
+                            Array.from({ length: 64 }, (_, i) => {
+                                const angle = (i / 16) * Math.PI * 2;
+                                const radius = size * (0.3 + (i / 64) * 0.7);
+                                return new THREE.Vector2(
+                                    Math.cos(angle) * radius,
+                                    Math.sin(angle) * radius
+                                );
+                            })
+                        );
+                        
+                        geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(64));
+                        material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+                        mesh = new THREE.Line(geometry, material);
+                            break;
+                        
+                    case 'turbulence':
+                        // Create chaotic lines
+                        const points = [];
+                        for (let i = 0; i < 12; i++) {
+                            const angle = (i / 12) * Math.PI * 2;
+                            points.push(
+                                new THREE.Vector2(Math.cos(angle) * size * 0.5, Math.sin(angle) * size * 0.5),
+                                new THREE.Vector2(Math.cos(angle) * size * (0.8 + Math.random() * 0.4), 
+                                                Math.sin(angle) * size * (0.8 + Math.random() * 0.4))
+                            );
+                        }
+                        geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        material = new THREE.LineBasicMaterial({ color: 0xff00ff });
+                        mesh = new THREE.LineSegments(geometry, material);
+                            break;
+                        
+                    case 'freeze':
+                        // Create snowflake-like pattern
+                        const flakePoints = [];
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (i / 6) * Math.PI * 2;
+                            flakePoints.push(
+                                new THREE.Vector2(0, 0),
+                                new THREE.Vector2(Math.cos(angle) * size, Math.sin(angle) * size)
+                            );
+                            // Add cross lines
+                            const crossAngle1 = angle + Math.PI / 12;
+                            const crossAngle2 = angle - Math.PI / 12;
+                            flakePoints.push(
+                                new THREE.Vector2(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6),
+                                new THREE.Vector2(Math.cos(crossAngle1) * size * 0.8, Math.sin(crossAngle1) * size * 0.8),
+                                new THREE.Vector2(Math.cos(angle) * size * 0.6, Math.sin(angle) * size * 0.6),
+                                new THREE.Vector2(Math.cos(crossAngle2) * size * 0.8, Math.sin(crossAngle2) * size * 0.8)
+                            );
+                        }
+                        geometry = new THREE.BufferGeometry().setFromPoints(flakePoints);
+                        material = new THREE.LineBasicMaterial({ color: 0x00ffff });
+                        mesh = new THREE.LineSegments(geometry, material);
+                            break;
+                        
+                    case 'respawn':
+                        // Create spawn point marker
+                        geometry = new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector2(-size, 0),
+                            new THREE.Vector2(size, 0),
+                            new THREE.Vector2(0, -size),
+                            new THREE.Vector2(0, size),
+                            new THREE.Vector2(-size * 0.7, -size * 0.7),
+                            new THREE.Vector2(size * 0.7, size * 0.7),
+                            new THREE.Vector2(-size * 0.7, size * 0.7),
+                            new THREE.Vector2(size * 0.7, -size * 0.7)
+                        ]);
+                        material = new THREE.LineBasicMaterial({ color: 0xffff00 });
+                        mesh = new THREE.LineSegments(geometry, material);
+                            break;
+                    case 'explosion':
+                        // Create explosion zone marker
+                        geometry = new THREE.RingGeometry(size * 0.6, size, 32);
+                        material = new THREE.LineBasicMaterial({ color: 0xff6600 });
+                        const explosionRing = new THREE.LineLoop(geometry, material);
+                        
+                        // Add cross pattern
+                        const crossPoints = [];
+                        for (let i = 0; i < 4; i++) {
+                            const angle = (i / 4) * Math.PI * 2;
+                            crossPoints.push(
+                                new THREE.Vector2(0, 0),
+                                new THREE.Vector2(Math.cos(angle) * size, Math.sin(angle) * size)
+                            );
+                        }
+                        const crossGeometry = new THREE.BufferGeometry().setFromPoints(crossPoints);
+                        const crossMaterial = new THREE.LineBasicMaterial({ color: 0xff6600 });
+                        const cross = new THREE.LineSegments(crossGeometry, crossMaterial);
+                        explosionRing.add(cross);
+                        mesh = explosionRing;
+                        break;
+                }
+                
+                mesh.position.set(config.position.x, config.position.y, 0);
+                this.overlayScene.add(mesh);
+                
+                // Store manipulator data
+                this.manipulators.push({
+                    ...config,
+                    mesh: mesh
+                });
+            }
+
+            calculateManipulatorInfluence(position) {
+                let totalForce = new THREE.Vector2(0, 0);
+                
+                this.manipulators.forEach(manipulator => {
+                    const toManip = new THREE.Vector2()
+                        .subVectors(manipulator.position, position);
+                    const distance = toManip.length();
+                    // Scale radius to match canvas bounds
+                    const radius = (manipulator.radius / 50) * 28; // Scale to match canvas width (-14 to +14)
+                    
+                    if (distance < radius) {
+                        // Enhanced strength calculation with stronger inverse distance relationship
+                        const distanceFactor = Math.max(0.1, distance / radius); // Prevent division by very small numbers
+                        const strength = (manipulator.power * 0.15) / distanceFactor; // Increased base multiplier and inverse distance scaling
+                        
+                        switch(manipulator.type) {
+                    case 'gravity':
+                                toManip.normalize().multiplyScalar(strength);
+                                totalForce.add(toManip);
+                        break;
+                    case 'repel':
+                                // Enhanced repulsion with stronger effect near the center
+                                const repelForce = toManip.normalize().multiplyScalar(-strength * 1.5);
+                                // Add extra kick near the center
+                                if (distance < radius * 0.3) {
+                                    repelForce.multiplyScalar(2.0);
+                                }
+                                totalForce.add(repelForce);
+                        break;
+                    case 'vortex':
+                                const perpendicular = new THREE.Vector2(-toManip.y, toManip.x)
+                                    .normalize()
+                                    .multiplyScalar(strength);
+                                totalForce.add(perpendicular);
+                        break;
+                    case 'turbulence':
+                                // Add random force
+                                totalForce.add(
+                                    new THREE.Vector2(
+                                        (Math.random() - 0.5) * strength,
+                                        (Math.random() - 0.5) * strength
+                                    )
+                                );
+                        break;
+                    case 'freeze':
+                                // Add slight force toward center and general dampening
+                                toManip.normalize().multiplyScalar(strength * 0.1);
+                                totalForce.add(toManip);
+                                // The actual slowing effect will be handled in updateObjects
+                                manipulator.freezeZone = true;
+                        break;
+                    case 'respawn':
+                                // Only store respawn position, actual respawn handled in updateObjects
+                                if (distance < radius * 0.2) {
+                                    manipulator.shouldRespawn = true;
+                        }
+                        break;
+                            case 'explosion':
+                                // For explosion type, we only check density in updateObjects
+                                // Store the manipulator info for density checking
+                                manipulator.lastExplosionTime = manipulator.lastExplosionTime || 0;
+                        break;
+                }
+                    }
+                });
+                
+                return totalForce;
+            }
+        }
+
+        // Initialize the engine
+        const artEngine = new ArtEngine();
+        
+        // Add event listener for the start/reset button
+        document.getElementById('startDrawing').addEventListener('click', () => {
+            if (!artEngine.isDrawing) {
+                artEngine.startDrawing();
+                    } else {
+                artEngine.resetDrawing();
+            }
+        });
+
+        // Add event listener for palette selection
+        document.getElementById('paletteSelect').addEventListener('change', (e) => {
+            FlowFieldsConfig.colorPalette = ColorPalettes[e.target.value].colors;
+            artEngine.resetDrawing();
+        });
+
+        // Add event listener for max line width
+        document.getElementById('maxLineWidth').addEventListener('input', (e) => {
+            FlowFieldsConfig.maxLineWidth = parseInt(e.target.value);
+            document.getElementById('maxLineWidthValue').textContent = e.target.value;
+            artEngine.resetDrawing();
+        });
+
+        // Add event listener for number of lines
+        document.getElementById('lineCount').addEventListener('input', (e) => {
+            FlowFieldsConfig.numObjects = parseInt(e.target.value);
+            document.getElementById('lineCountValue').textContent = e.target.value;
+            artEngine.resetDrawing();
+        });
+
+        // Add event listeners for movement controls
+        document.getElementById('movementStyle').addEventListener('change', (e) => {
+            FlowFieldsConfig.movementStyle = e.target.value;
+            artEngine.resetDrawing();
+        });
+
+        document.getElementById('moveSpeed').addEventListener('input', (e) => {
+            FlowFieldsConfig.speed = parseInt(e.target.value) / 50; // Scale down for better control
+        });
+
+        document.getElementById('turnFrequency').addEventListener('input', (e) => {
+            FlowFieldsConfig.turnFrequency = parseInt(e.target.value) / 500; // Scale down for better control
+        });
+
+        // Add trail style event listener
+        document.getElementById('trailStyle').addEventListener('change', () => {
+            // Clear existing trails on style change
+            artEngine.trails.forEach(trail => artEngine.scene.remove(trail));
+            artEngine.trails = [];
+        });
+
+        // Add these functions after the ArtEngine class
+        async function saveArtwork() {
+            try {
+                const canvas = artEngine.renderer.domElement;
+                
+                // Store current auto clear setting
+                const originalAutoClear = artEngine.renderer.autoClear;
+                
+                // Render only the main scene
+                artEngine.renderer.autoClear = true;
+                artEngine.renderer.render(artEngine.scene, artEngine.camera);
+                
+                // Create a temporary canvas to ensure clean data
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const ctx = tempCanvas.getContext('2d');
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                ctx.drawImage(canvas, 0, 0);
+                
+                // For Safari compatibility, explicitly set the MIME type and quality
+                const imageData = tempCanvas.toDataURL('image/png', 1.0);
+                
+                // Restore the overlay
+                artEngine.renderer.autoClear = false;
+                artEngine.renderer.render(artEngine.overlayScene, artEngine.camera);
+                
+                // Restore original auto clear setting
+                artEngine.renderer.autoClear = originalAutoClear;
+                
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const filename = `artwork_${timestamp}.png`;
+                
+                // Try server save first
+                try {
+                    const response = await fetch('/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            imageData: imageData,
+                            filename: filename 
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Artwork saved to server:', result.path);
+                        return; // Exit if server save was successful
+                    }
+                } catch (serverError) {
+                    console.warn('Server save failed, falling back to direct download:', serverError);
+                    // Fall back to direct download
+                    const link = document.createElement('a');
+                    link.href = imageData;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch (error) {
+                console.error('Error saving artwork:', error);
+                alert('Failed to save artwork. Please try again.');
+            }
+        }
+
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
+        async function startRecording(duration) {
+            if (isRecording) return;
+            
+            try {
+                isRecording = true;
+                recordedChunks = [];
+                
+                // Create a separate renderer for recording without manipulators
+                const recordRenderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    preserveDrawingBuffer: true,
+                    alpha: true
+                });
+                recordRenderer.setSize(
+                    artEngine.renderer.domElement.width,
+                    artEngine.renderer.domElement.height
+                );
+                recordRenderer.setPixelRatio(window.devicePixelRatio);
+                
+                // Get the recording stream from the separate renderer
+                const stream = recordRenderer.domElement.captureStream(60); // 60fps
+                
+                // Test supported mime types, prioritizing Safari compatibility
+                const mimeTypes = [
+                    'video/mp4',
+                    'video/webm;codecs=h264',
+                    'video/webm;codecs=vp9',
+                    'video/webm;codecs=vp8',
+                    'video/webm'
+                ];
+                
+                let selectedMimeType = null;
+                for (const mimeType of mimeTypes) {
+                    if (MediaRecorder.isTypeSupported(mimeType)) {
+                        selectedMimeType = mimeType;
+                        break;
+                    }
+                }
+                
+                if (!selectedMimeType) {
+                    throw new Error('No supported mime types found for this browser');
+                }
+                
+                // Create MediaRecorder with supported format and high quality
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: selectedMimeType,
+                    videoBitsPerSecond: 8000000 // 8 Mbps for high quality
+                });
+                
+                // Track recording start time
+                const startTime = Date.now();
+                
+                // Set up recording animation loop
+                function recordingLoop() {
+                    if (!isRecording) return;
+                    
+                    // Check if we've reached the duration
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    if (elapsed >= duration) {
+                        if (mediaRecorder && mediaRecorder.state === 'recording') {
+                            mediaRecorder.stop();
+                        }
+                        return;
+                    }
+                    
+                    // Only render the main scene to the recording renderer
+                    recordRenderer.render(artEngine.scene, artEngine.camera);
+                    requestAnimationFrame(recordingLoop);
+                }
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onerror = (error) => {
+                    console.error('MediaRecorder error:', error);
+                    stopRecording();
+                    recordRenderer.dispose();
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    try {
+                        if (recordedChunks.length === 0) {
+                            console.error('No data was recorded');
+                            return;
+                        }
+                        
+                        const blob = new Blob(recordedChunks, { type: selectedMimeType });
+                        const reader = new FileReader();
+                        
+                        reader.onloadend = async () => {
+                            try {
+                                const base64data = reader.result;
+                                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                                const extension = selectedMimeType.includes('mp4') ? 'mp4' : 'webm';
+                                const filename = `artwork_${timestamp}.${extension}`;
+                                
+                                const response = await fetch('/save-recording', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        blob: base64data,
+                                        filename: filename,
+                                        mimeType: selectedMimeType
+                                    })
+                                });
+                                
+                                const result = await response.json();
+                                if (result.success) {
+                                    console.log('Recording saved:', result.path);
+                                }
+                            } catch (error) {
+                                console.error('Error saving recording:', error);
+                            } finally {
+                                isRecording = false;
+                                recordRenderer.dispose();
+                                recordedChunks = [];
+                            }
+                        };
+                        
+                        reader.readAsDataURL(blob);
+                    } catch (error) {
+                        console.error('Error processing recording:', error);
+                    } finally {
+                        isRecording = false;
+                        recordRenderer.dispose();
+                    }
+                };
+                
+                // Start the recording loop
+                recordingLoop();
+                
+                // Start recording with smaller chunk intervals for more precise timing
+                mediaRecorder.start(100); // Request data every 100ms
+                console.log('Recording started for', duration, 'seconds');
+                
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                isRecording = false;
+                recordedChunks = [];
+            }
+        }
+
+        function stopRecording() {
+            try {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    console.log('Stopping recording');
+                    mediaRecorder.stop();
+                }
+            } catch (error) {
+                console.error('Error stopping recording:', error);
+            } finally {
+                isRecording = false;
+            }
+        }
+
+        // Configuration management functions
+        function getAllControlValues() {
+            return {
+                paletteSelect: document.getElementById('paletteSelect').value,
+                resolutionSelect: document.getElementById('resolutionSelect').value,
+                aspectRatio: document.getElementById('aspectRatio').value,
+                algorithmSelect: document.getElementById('algorithmSelect').value,
+                movementStyle: document.getElementById('movementStyle').value,
+                lineStyle: document.getElementById('lineStyle').value,
+                maxLineWidth: document.getElementById('maxLineWidth').value,
+                lineCount: document.getElementById('lineCount').value,
+                moveSpeed: document.getElementById('moveSpeed').value,
+                turnFrequency: document.getElementById('turnFrequency').value,
+                fadeTrails: document.getElementById('fadeTrails').checked,
+                avoidCrossing: document.getElementById('avoidCrossing').checked,
+                limiterType: document.getElementById('limiterType').value,
+                limiterRange: document.getElementById('limiterRange').value,
+                trailStyle: document.getElementById('trailStyle').value,
+                manipulatorSelect: document.getElementById('manipulatorSelect').value,
+                manipulatorText: document.getElementById('manipulatorText').value,
+                manipulatorRadius: document.getElementById('manipulatorRadius').value,
+                manipulatorPower: document.getElementById('manipulatorPower').value,
+                criticalMassThreshold: document.getElementById('criticalMassThreshold').value
+            };
+        }
+
+        function setAllControlValues(config) {
+            for (const [id, value] of Object.entries(config)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = value;
+                    } else {
+                        element.value = value;
+                    }
+                    // Trigger change event to update any dependent values
+                    element.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+
+        function loadConfigs() {
+            const configSelect = document.getElementById('configSelect');
+            configSelect.innerHTML = '<option value="">Load Config...</option>';
+            
+            const configs = JSON.parse(localStorage.getItem('artworkConfigs') || '{}');
+            for (const name of Object.keys(configs)) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                configSelect.appendChild(option);
+            }
+        }
+
+        // Add event listeners for configuration management
+        document.getElementById('saveConfig').addEventListener('click', () => {
+            const name = prompt('Enter a name for this configuration:');
+            if (name) {
+                const configs = JSON.parse(localStorage.getItem('artworkConfigs') || '{}');
+                configs[name] = getAllControlValues();
+                localStorage.setItem('artworkConfigs', JSON.stringify(configs));
+                loadConfigs();
+            }
+        });
+
+        document.getElementById('configSelect').addEventListener('change', (e) => {
+            const name = e.target.value;
+            if (name) {
+                const configs = JSON.parse(localStorage.getItem('artworkConfigs') || '{}');
+                const config = configs[name];
+                if (config) {
+                    setAllControlValues(config);
+                    artEngine.resetDrawing();
+                }
+                e.target.value = ''; // Reset select to placeholder
+            }
+        });
+
+        document.getElementById('deleteConfig').addEventListener('click', () => {
+            const configSelect = document.getElementById('configSelect');
+            const name = configSelect.value;
+            if (name) {
+                const configs = JSON.parse(localStorage.getItem('artworkConfigs') || '{}');
+                delete configs[name];
+                localStorage.setItem('artworkConfigs', JSON.stringify(configs));
+                loadConfigs();
+            }
+        });
+
+        // Load saved configurations on startup
+        loadConfigs();
+
+        // Add event listeners after initializing artEngine
+        document.getElementById('saveArtwork').addEventListener('click', saveArtwork);
+        document.getElementById('newArtwork').addEventListener('click', () => artEngine.resetDrawing());
+
+            document.getElementById('recordingLength').addEventListener('change', (e) => {
+            const duration = parseInt(e.target.value);
+            if (duration > 0) {
+                startRecording(duration);
+            }
+        });
+
+        // Add this near the top of the script, after the ColorPalettes definition
+        
+        // Set up record time display interaction
+        document.querySelector('.record-time').addEventListener('click', () => {
+            const select = document.getElementById('recordingLength');
+            const currentValue = parseInt(select.value);
+            const options = Array.from(select.options).map(opt => parseInt(opt.value));
+            
+            // Find next value in sequence
+            const currentIndex = options.indexOf(currentValue);
+            const nextIndex = (currentIndex + 1) % options.length;
+            const nextValue = options[nextIndex];
+            
+            // Update select value
+            select.value = nextValue;
+            
+            // Update display text
+            document.getElementById('recordSeconds').textContent = 
+                nextValue === 0 ? 'off' : nextValue + 's';
+            
+            // If currently recording, stop it
+            if (isRecording) {
+                stopRecording();
+            }
+            
+            // If new value is not 0 and drawing is active, start recording
+            if (nextValue > 0 && artEngine.isDrawing) {
+                startRecording(nextValue);
+            }
+        });
+        
+        // Initialize record time display
+        document.getElementById('recordSeconds').textContent = 
+            document.getElementById('recordingLength').value + 's';
+    </script>
+</body>
+</html> 

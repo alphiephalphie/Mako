@@ -1,0 +1,140 @@
+/* Remove all custom styling except layout */
+:root {
+    color-scheme: light dark;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#controls {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.control-buttons {
+    padding: 12px;
+    border-bottom: 1px solid;
+}
+
+.main-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.recording-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recording-controls label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.recording-controls select {
+    width: auto;
+}
+
+.utility-controls {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+/* Remove ALL custom button styling */
+button {
+    all: revert;
+}
+
+/* Make checkboxes not take full width */
+input[type="checkbox"] {
+    width: auto;
+}
+
+.controls-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Keep only essential functional styles */
+canvas {
+    position: fixed;
+    top: 50%;
+    left: calc(50% - 200px); /* Half of sidebar width */
+    transform: translate(-50%, -50%);
+}
+
+/* Remove all custom styling for form elements */
+select, button, input {
+    all: revert;
+    width: 100%;
+}
+
+/* Simple label styling */
+label {
+    display: block;
+}
+
+/* Basic typography and spacing */
+label {
+    display: block;
+    margin-bottom: 12px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Space between label text and its control */
+label > select,
+label > input {
+    margin-top: 4px;
+}
+
+/* Checkbox group layout */
+.checkbox-group {
+    margin: 4px 0;
+}
+
+.checkbox-group label {
+    margin-bottom: 4px;
+}
+
+/* Value display for sliders */
+input[type="range"] + span {
+    margin-left: 8px;
+}
+
+/* Nested controls (like limiter value) */
+label > div {
+    margin-top: 4px;
+}
+
+/* Add some breathing room between sections */
+.controls-grid > div {
+    padding: 4px;
+}
+
+/* Ensure consistent button spacing */
+.control-buttons {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+} 

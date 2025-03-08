@@ -1,0 +1,311 @@
+/* Base layout */
+:root {
+    color-scheme: light dark;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji";
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* Light mode variables */
+    --bg-color: #f5f5f7;
+    --panel-bg: #ffffff;
+    --panel-border: #e2e2e2;
+    --text-color: #1d1d1f;
+    --input-bg: #f5f5f7;
+    --input-border: #d2d2d7;
+    --input-hover: #eaeaed;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Canvas positioning */
+canvas {
+    position: relative;
+    margin: 32px;
+    z-index: 1;
+    display: block;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.15),
+                        0 12px 30px -8px rgba(0, 0, 0, 0.1),
+                        0 16px 36px -10px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.15),
+                0 12px 30px -8px rgba(0, 0, 0, 0.1),
+                0 16px 36px -10px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background-color: white;
+    max-width: calc(100vw - 364px);
+    max-height: calc(100vh - 64px);
+    will-change: transform;
+}
+
+/* Controls panel */
+#controls {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--panel-border);
+    letter-spacing: -0.01em;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-box-shadow: -8px 0 24px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: -8px 0 24px -6px rgba(0, 0, 0, 0.1);
+    will-change: transform;
+}
+
+.control-buttons {
+    padding: 12px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.main-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+.main-controls button {
+    width: 32px;
+    aspect-ratio: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.config-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.config-controls button {
+    width: 32px;
+    aspect-ratio: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.config-controls select {
+    flex: 1;
+}
+
+.main-controls button:hover,
+.config-controls button:hover {
+    background: var(--input-hover);
+}
+
+.main-controls button:active,
+.config-controls button:active {
+    background: var(--panel-border);
+}
+
+.record-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    height: 32px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    border-radius: 4px;
+    font-size: 13px;
+    color: inherit;
+    cursor: pointer;
+}
+
+.record-time:hover {
+    background: var(--input-hover);
+}
+
+/* Remove the utility controls section since we moved the buttons */
+.utility-controls {
+    display: none;
+}
+
+/* Keep only essential label layout */
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+/* Control section */
+.control-section {
+    padding: 12px;
+    border-bottom: 1px solid;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-section label {
+    display: grid;
+}
+
+.control-section select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Remove revert and add specific styling */
+button, input {
+    all: revert;
+}
+
+select {
+    appearance: auto;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: inherit;
+    padding: 4px 8px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+/* Make checkboxes not take full width */
+input[type="checkbox"] {
+    width: auto;
+}
+
+.controls-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Basic checkbox group layout */
+.checkbox-group {
+    margin: 4px 0;
+}
+
+.checkbox-group label {
+    margin-bottom: 4px;
+}
+
+/* Section headers */
+.section-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+/* Manipulator grid */
+.manipulator-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.position-btn {
+    aspect-ratio: 1;
+    padding: 0;
+    font-size: 14px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.position-btn:hover {
+    background: var(--input-hover);
+}
+
+.position-btn:active {
+    background: var(--panel-border);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --panel-bg: #2d2d2d;
+        --panel-border: #404040;
+        --text-color: #e0e0e0;
+        --input-bg: #363636;
+        --input-border: #404040;
+        --input-hover: #404040;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    canvas {
+        -webkit-box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3),
+                           0 12px 30px -8px rgba(0, 0, 0, 0.25),
+                           0 16px 36px -10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3),
+                   0 12px 30px -8px rgba(0, 0, 0, 0.25),
+                   0 16px 36px -10px rgba(0, 0, 0, 0.2);
+        background-color: #1a1a1a;
+    }
+    
+    #controls {
+        -webkit-box-shadow: -8px 0 24px -6px rgba(0, 0, 0, 0.2);
+        box-shadow: -8px 0 24px -6px rgba(0, 0, 0, 0.2);
+    }
+} 
